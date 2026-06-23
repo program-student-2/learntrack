@@ -18,6 +18,11 @@ dist-ssr
 # Backups exported from the app
 learntrack_backup_*.json
 
+# Firebase CLI cache
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

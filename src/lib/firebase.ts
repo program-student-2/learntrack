@@ -1,5 +1,10 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, type Auth } from 'firebase/auth';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  type Firestore,
+} from 'firebase/firestore';
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -14,13 +19,19 @@ export const isFirebaseConfigured = Boolean(config.apiKey && config.projectId &&
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
+let db: Firestore | null = null;
 
 if (isFirebaseConfigured) {
   app = initializeApp(config);
   auth = getAuth(app);
+  // Persistent offline cache (IndexedDB). Reads/writes work offline and
+  // sync once the device is back online.
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({}),
+  });
 }
 
-export { app, auth };
+export { app, auth, db };
 export const googleProvider = new GoogleAuthProvider();
 
 const rawAllowed = import.meta.env.VITE_ALLOWED_EMAILS ?? '';
