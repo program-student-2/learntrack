@@ -4,8 +4,8 @@
   <h1>LearnTrack</h1>
 
   <p>
-    学習時間と目標を記録する、シンプルでプライベートな学習トラッカー。<br/>
-    React + TypeScript + Vite ・ Tailwind v4 ・ Firebase Auth ・ PWA
+    学習時間と目標を記録する、クラウド同期対応の学習トラッカー。<br/>
+    React + TypeScript + Vite ・ Tailwind v4 ・ Firebase Auth + Firestore ・ PWA
   </p>
 </div>
 
@@ -21,7 +21,7 @@
 - Firebase Google 認証 + 自分のメールだけ許可するアロウリスト
 - PWA としてインストール可能（ホーム画面 / スタートメニューから起動）
 
-データはブラウザの `localStorage` に保存される（端末ローカル / クラウド同期なし）。
+データは Cloud Firestore にユーザーごとに保存され、ログインすれば端末をまたいで自動同期される。オフライン時は IndexedDB の永続キャッシュで動作し、オンライン復帰時に同期される。
 
 ## クイックスタート
 
@@ -43,7 +43,8 @@ npm run preview
 1. [Firebase Console](https://console.firebase.google.com/) で新規プロジェクト作成
 2. Web アプリを追加 → 表示される `firebaseConfig` の値を控える
 3. Authentication → Sign-in method → **Google** を有効化
-4. ローカルに `.env.local` を作って以下を埋める：
+4. Firestore Database を作成し、`firestore.rules` をデプロイ（`firebase deploy --only firestore:rules`）
+5. ローカルに `.env.local` を作って以下を埋める：
 
 | 環境変数 | 内容 |
 |---|---|
@@ -55,7 +56,7 @@ npm run preview
 | `VITE_FIREBASE_APP_ID` | `1:xxx:web:xxx` |
 | `VITE_ALLOWED_EMAILS` | サインインを許可するメール（カンマ区切り。空なら全許可）|
 
-> 許可リストはクライアント側チェック。UI ゲートとしては機能するが、データ保護を厳密にやるなら Firestore + セキュリティルールが必要（本アプリは localStorage 完結のため簡易ゲートで十分）。
+> 許可メールリストはクライアント側の UI ゲート。実データの保護は **Firestore セキュリティルール**（`firestore.rules`）で行い、各ユーザーは自分の UID 配下のドキュメントのみ読み書き可能。
 
 ## スクリプト
 
@@ -71,7 +72,7 @@ npm run preview
 
 ```
 src/
-├── App.tsx                       ルーティング + 状態（localStorage 永続化）
+├── App.tsx                       ルーティング + 状態（Firestore 同期 / オフラインキャッシュ）
 ├── lib/
 │   ├── firebase.ts               Firebase 初期化 + 許可メール判定
 │   └── auth.tsx                  AuthProvider / useAuth
@@ -95,11 +96,15 @@ src/
 
 ## データ管理
 
-- 学習記録と設定はブラウザの `localStorage` に保存される
-- 設定 → 「バックアップをダウンロード」で全データを JSON エクスポート
-- 別端末や別ブラウザに移行するときは、復元側でその JSON を読み込む
+- 学習記録と設定は **Cloud Firestore** にユーザーごとに保存され、ログインすれば端末間で自動同期される
+- オフライン時は IndexedDB の永続キャッシュ（`persistentLocalCache`）で動作し、オンライン復帰時に同期
+- アクセス制御は Firestore セキュリティルールで各ユーザーの UID 配下に限定
+- 設定 → 「バックアップをダウンロード」で全データを JSON エクスポート / 復元も可能
 - バックアップファイル（`learntrack_backup_*.json`）は `.gitignore` 済み
 
 ## ライセンス
 
-Private — 個人利用
+© 2026 program_student. All rights reserved.
+
+本リポジトリはポートフォリオ閲覧用に公開しています。コードの閲覧は自由ですが、
+複製・改変・再配布・商用利用は許可していません。
